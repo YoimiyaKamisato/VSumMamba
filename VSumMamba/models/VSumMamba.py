@@ -449,7 +449,11 @@ def VSumMamba_A(dataset='SumMe_77'):
         patch_dim = 1
     
 
+<<<<<<< HEAD
     return Video_Sum_Mamba_A(
+=======
+    return VSumMamba_A(
+>>>>>>> 666d06dc13c5c7a85c7341597e8cfadc6f6047d2
         img_dim=img_dim,
         patch_dim=patch_dim,
         out_dim=out_dim,
