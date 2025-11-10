@@ -456,7 +456,7 @@ def VSumMamba_A(dataset='SumMe'):
         patch_dim = 1
     
 
-    return SpatioTemporal_Vision_Transformer_03(
+    return VSumMamba_A(
         img_dim=img_dim,
         patch_dim=patch_dim,
         out_dim=out_dim,
