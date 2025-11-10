@@ -166,7 +166,7 @@ class LayerNorm_conv(nn.LayerNorm):
         ret = super().forward(x.type(torch.float32))# add ssf
         return ret.type(orig_type).permute(0,3,1,2)
 
-class VSumMamba_A(nn.Module):
+class Video_Sum_Mamba_A(nn.Module):
     def __init__(
             self,
             img_dim,
@@ -176,8 +176,6 @@ class VSumMamba_A(nn.Module):
             embedding_dim,
             hidden_dim,
             dropout_rate=0.0,
-            attn_dropout_rate=0.0,
-            conv_patch_representation=False,
             positional_encoding_type="learned",
             depth=12,
             embed_dim=768,
@@ -191,11 +189,9 @@ class VSumMamba_A(nn.Module):
             bimamba=True,
             device=None,
             dtype=None,
-       
-
     ):
         factory_kwargs = {"device": device, "dtype": dtype}
-        super(VSumMamba_A, self).__init__()
+        super(Video_Sum_Mamba_A, self).__init__()
 
 
         assert img_dim % patch_dim == 0
@@ -206,8 +202,8 @@ class VSumMamba_A(nn.Module):
         self.out_dim = out_dim
         self.num_channels = num_channels
         self.dropout_rate = dropout_rate
-        self.attn_dropout_rate = attn_dropout_rate
-        self.conv_patch_representation = conv_patch_representation
+       
+        
         self.aug_dim = aug_dim
         self.num_patches = int((img_dim // patch_dim) ** 2)
         self.seq_length = self.num_patches + 1
@@ -349,7 +345,7 @@ class VSumMamba_A(nn.Module):
 
     def forward(self, x, inference_params=None):
         #Multi-GA
-        bs, t, c, h, w = x.shape  # [40,16,512,7,7]
+        bs, t, c, h, w = x.shape  
         x = x.view(bs*t,c,h,w)
         visual_mamba_ms=[]
         for stage in self.mamba_stages:
@@ -405,11 +401,11 @@ class VSumMamba_A(nn.Module):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         x_outputs = torch.zeros(self.num_patches, bs, self.out_dim).to(device)
-        orix1 = self.mlp_single(x).permute(0, 2, 1)
+        originx1 = self.mlp_single(x).permute(0, 2, 1)
         
         residual = None
         for i in range(self.num_patches):
-            x1 = self.mlp_single_forloop(torch.unsqueeze(x.permute(2, 0, 1)[i], 1)) + orix1
+            x1 = self.mlp_single_forloop(torch.unsqueeze(x.permute(2, 0, 1)[i], 1)) + originx1
             x1_norm = self.PSMM_norm(x1)
             
             
@@ -431,9 +427,6 @@ class VSumMamba_A(nn.Module):
             x1_PSMM = self.to_cls_token(x1_PSMM[:, 0])
             x1_PSMM = self.mlp_head(x1_PSMM)
             x_outputs[i] = x1_PSMM
-
-
-
         return x_outputs
 
     def _get_padding(self, padding_type, kernel_size):
@@ -444,9 +437,9 @@ class VSumMamba_A(nn.Module):
         return tuple(0 for _ in kernel_size)
 
 
-def VSumMamba_A(dataset='SumMe'):
+def VSumMamba_A(dataset='SumMe_77'):
     
-    elif dataset == 'TVSum_77':
+    if dataset == 'TVSum_77':
         img_dim = 4
         out_dim = 2
         patch_dim = 1
@@ -456,17 +449,13 @@ def VSumMamba_A(dataset='SumMe'):
         patch_dim = 1
     
 
-    return SpatioTemporal_Vision_Transformer_03(
+    return Video_Sum_Mamba_A(
         img_dim=img_dim,
         patch_dim=patch_dim,
         out_dim=out_dim,
-        # edited
         num_channels=512,
         embedding_dim=768,
         hidden_dim=3072,
         dropout_rate=0.1,
-        attn_dropout_rate=0.0,
-
-        conv_patch_representation=False,
         positional_encoding_type="learned",
     )
