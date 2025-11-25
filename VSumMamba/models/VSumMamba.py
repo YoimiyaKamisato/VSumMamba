@@ -421,8 +421,7 @@ class Video_Sum_Mamba_A(nn.Module):
                     )
 
             
-            x1_PSMM = x1_norm
-            x1_PSMM = x1_PSMM + x1
+            
             x1_PSMM = self.pre_head_ln(x1_PSMM)
             x1_PSMM = self.to_cls_token(x1_PSMM[:, 0])
             x1_PSMM = self.mlp_head(x1_PSMM)
